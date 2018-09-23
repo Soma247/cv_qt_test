@@ -9,36 +9,25 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // read an image
-    int *t=new int();
-    int *dt=new int[3];
-    delete t;
-    delete[]dt;
-
-
 
     cv::Mat image = cv::imread("d://Qt//projects//cvtest//kqrehk93.jpg", 1),
-            grimg,
-            image_blurred_with_3x3_kernel;
-    printf("-1\n");
-    binarize nb(image);
-    printf("-2\n");
-    nb.binarizeOtsu();
-printf("-3\n");
-    // create image window named "My Image"
-    cv::namedWindow("My Image");
-    cv::namedWindow("window_gray");
-    cv::namedWindow("window_bw");
-    cv::namedWindow("window_blurred_with_5x5_kernel");
+            image_blurred_with_5x5_kernel;
+    cv::GaussianBlur(image, image_blurred_with_5x5_kernel, cv::Size(5, 5), 0,0);
+    binarize nbo(image_blurred_with_5x5_kernel),
+             nbb(image_blurred_with_5x5_kernel);
 
-    // Show our images inside the created windows.
+    nbo.binarizeOtsu();
+    nbb.binarizeBradly(5,0.15);
 
-    // show the image on window
-  //  cv::cvtColor(image,grimg,cv::COLOR_RGB2GRAY);
+    cv::namedWindow("Original");
+    cv::namedWindow("gauss_blurred_with_5x5_kernel");
+    cv::namedWindow("binarized_otsu");
+    cv::namedWindow("binarized_bradly");
 
-  //  cv::GaussianBlur(image, image_blurred_with_3x3_kernel, cv::Size(111, 111), 0);
-    cv::imshow("window_bw",*nb.getimg());
-    cv::imshow("My Image",image);
+    cv::imshow("Original",image);
+    cv::imshow("gauss_blurred_with_5x5_kernel",image_blurred_with_5x5_kernel);
+    cv::imshow("binarized_otsu",*nbo.getimg());
+    cv::imshow("binarized_bradly",*nbb.getimg());
 
 }
 
@@ -47,6 +36,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
- void MainWindow::on_pushButton_clicked(){
+void MainWindow::on_pushButton_clicked(){
     exit(EXIT_SUCCESS);
 }

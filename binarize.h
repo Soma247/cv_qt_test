@@ -17,9 +17,8 @@ public:
     binarize(cv::Mat originalimg);
     ~binarize();
     bool binarizeOtsu();
-    bool binarizeBradly(int size);
+    bool binarizeBradly(int size, double offset);
     bool setimg(cv::Mat img);
-
     unsigned int getpcount(){return pixcount;}
     cv::Mat *getimg(){return greyimg;}
 

@@ -24,7 +24,7 @@ bool binarize::setimg(cv::Mat img){
     pixcount=static_cast<unsigned int>(img.size().width*img.size().height);
     greyimg=new cv::Mat();
     if(!pixcount)return 1;
-        cv::cvtColor(img,*greyimg,cv::COLOR_RGB2GRAY);
+    cv::cvtColor(img,*greyimg,cv::COLOR_RGB2GRAY);
     return 0;
 }
 
@@ -75,14 +75,14 @@ bool binarize::binarizeOtsu(){
 }
 
 
-bool binarize::binarizeBradly(int wsize){
+bool binarize::binarizeBradly(int wsize,double offset=0.15){
     //-------------init----------------------------------------------------
     if(!pixcount)return 1;//blank img
     int imax=greyimg->size().height,
-        jmax=greyimg->size().width,
-        count=imax/wsize+imax%wsize?1:0,
-        wheight=imax/count,
-        wwidth=jmax/count;
+            jmax=greyimg->size().width,
+            count=imax/wsize+imax%wsize?1:0,
+            wheight=imax/count,
+            wwidth=jmax/count;
 
     ulong ** intmatr=new ulong*[imax];
     for(int i=0;i<imax;i++)
@@ -97,23 +97,27 @@ bool binarize::binarizeBradly(int wsize){
     for (int i=1;i<imax;i++)
         for(int j=1;j<jmax;j++)
             intmatr[i][j]=static_cast<ulong>(greyimg->at<uchar>(i,j))
-                           + intmatr[i-1][j]
-                            + intmatr[i][j-1]
-                             - intmatr[i-1][j-1];
+                    + intmatr[i-1][j]
+                    + intmatr[i][j-1]
+                    - intmatr[i-1][j-1];
     //---------------------------------------------------------------------
-    int x1,x2,y1,y2,i(0),j(0);
+    int x1,x2,y1,y2,i(0),j(0),wpcount;
+    ulong sum;
     while(i<imax && j<jmax){
-          x1=j;
-          y1=i;
-          if((x2=j+wwidth)>=jmax)x2=jmax-1;
-          if((y2=i+wheight)>=imax)y2=imax-1;
-
-
-
-
-
-          if((j=x2+1)>=jmax){j=0;i=y2+1;}
+        x1=j;
+        y1=i;
+        if((x2=j+wwidth)>=jmax)x2=jmax-1;
+        if((y2=i+wheight)>=imax)y2=imax-1;
+        wpcount=(x2-x1)*(y2-y1);
+        sum=intmatr[y1][x1]+intmatr[y2][x2]-intmatr[y1][x2]-intmatr[y2][x1];
+        for(int l=y1;l<=y2;l++)
+            for(int c=x1;c<=x2;c++)
+                greyimg->at<uchar>(l,c) = (static_cast<double>(greyimg->at<uchar>(l,c))>=sum*(1.0+offset)/wpcount)? 255 : 0;//new binary img
+        if((j=x2+1)>=jmax){//to next line
+            j=0;
+            i=y2+1;
         }
+    }
 
 
     //------------------free & ret-----------------------------------------
