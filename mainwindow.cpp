@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
 
-    cv::Mat image = cv::imread("d://Qt//projects//cvtest//kqrehk93.jpg", 1),
+    cv::Mat image = cv::imread("d://Qt//projects//cvtest//kqrehk93-1.jpg", 1),
             image_blurred_with_5x5_kernel;
     cv::GaussianBlur(image, image_blurred_with_5x5_kernel, cv::Size(5, 5), 0,0);
     binarize nbo(image_blurred_with_5x5_kernel),
@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     nbo.binarizeOtsu();
     nbb.binarizeBradly(5,0.15);
-
+    cv::imwrite("d://Qt//projects//cvtest//kqrehk93-1.jpg",*nbb.getimg());
     cv::namedWindow("Original");
     cv::namedWindow("gauss_blurred_with_5x5_kernel");
     cv::namedWindow("binarized_otsu");
