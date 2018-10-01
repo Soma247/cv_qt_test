@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = cvtest
 TEMPLATE = app
@@ -25,10 +25,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    binarize.cpp
+    qcustomplot.cpp \
+    cvimgops.cpp
 
 HEADERS  += mainwindow.h \
-    binarize.h
+    asmOpenCV.h \
+    qcustomplot.h \
+    cvimgops.h
 
 FORMS    += mainwindow.ui
 
