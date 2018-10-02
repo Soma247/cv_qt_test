@@ -118,7 +118,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="btn_closure">
+        <widget class="QPushButton" name="btn_closing">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
            <horstretch>0</horstretch>
@@ -126,7 +126,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Closure</string>
+          <string>Closing</string>
          </property>
         </widget>
        </item>
@@ -144,7 +144,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_10">
+        <widget class="QPushButton" name="btn_cond_dilate">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
            <horstretch>0</horstretch>
@@ -152,12 +152,12 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>PushButton</string>
+          <string>Cond.Dilate</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_12">
+        <widget class="QPushButton" name="btn_skelenonize">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
            <horstretch>0</horstretch>
@@ -165,20 +165,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>PushButton</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_11">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>PushButton</string>
+          <string>Skeletonize</string>
          </property>
         </widget>
        </item>
@@ -206,7 +193,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>30</x>

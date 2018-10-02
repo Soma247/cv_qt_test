@@ -35,8 +35,10 @@ public:
     bool dilate(int dilation_elem=0,int dilation_size=1);
     bool erode(int erosion_elem=0, int erosion_size=1);
     bool morph(int morph_elem=0,int morph_size=1, int operation=0);
-
-
+    bool condDilate(int erode_elem=0, int erode_size=1, int dilate_elem=0, int dilate_size=1);
+    bool combine(cv::Mat img);
+    bool cross(cv::Mat img);
+    bool to_skeleton(int erode_elem=0, int erode_size=1, int dilate_elem=0, int dilate_size=1);
 
 };
 

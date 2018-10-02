@@ -21,22 +21,16 @@ public:
 private slots:
 
     void on_btn_load_clicked();
-
     void on_btn_exit_clicked()__attribute__((noreturn));
-
     void on_btn_gaussianBlur_clicked();
-
     void on_btn_bin_otsu_clicked();
-
     void on_btn_bin_bradly_clicked();
-
     void on_btn_dilate_clicked();
-
     void on_btn_erode_clicked();
-
-    void on_btn_closure_clicked();
-
+    void on_btn_closing_clicked();
     void on_btn_opening_clicked();
+    void on_btn_cond_dilate_clicked();
+    void on_btn_skelenonize_clicked();
 
 private:
     QGraphicsScene *scene;

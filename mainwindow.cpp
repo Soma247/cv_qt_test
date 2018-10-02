@@ -10,29 +10,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->hst_otsu->hide();//hist hide
-
-    /*
-    cv::Mat image = cv::imread("d://Qt//projects//cvtest//kqrehk93.jpg", 1),
-            image_blurred_with_5x5_kernel;
-    cv::GaussianBlur(image, image_blurred_with_5x5_kernel, cv::Size(5, 5), 0,0);
-    cvImgOps nbo(image_blurred_with_5x5_kernel),
-            nbb(image_blurred_with_5x5_kernel);
-
-    nbo.binarizeOtsu();
-    nbb.binarizeBradly(5,0.15);
-
-    cv::namedWindow("Original");
-    cv::namedWindow("gauss_blurred_with_5x5_kernel");
-    cv::namedWindow("binarized_otsu");
-    cv::namedWindow("binarized_bradly");
-
-    cv::imshow("Original",image);
-    cv::imshow("gauss_blurred_with_5x5_kernel",image_blurred_with_5x5_kernel);
-    cv::imshow("binarized_otsu",*nbo.getimg());
-    cv::imshow("binarized_bradly",*nbb.getimg());
-    //-------------to grview-------------------------
-
-*/
 }
 
 MainWindow::~MainWindow(){
@@ -49,8 +26,10 @@ void MainWindow::printImg(){
 
 
 void MainWindow::on_btn_load_clicked(){
+    ui->hst_otsu->hide();//hist hide
     QString filename = QFileDialog::getOpenFileName(this,
                                                     tr("Open Image"), "../cvtest", tr("Image Files (*.jpg *.bmp)"));
+    if(filename.isEmpty()||filename.isNull())return;
     image.setimg(cv::imread(filename.toStdString(), 1));
     this->printImg();
 }
@@ -60,8 +39,8 @@ void MainWindow::on_btn_exit_clicked(){
     exit(EXIT_SUCCESS);
 }
 
-void MainWindow::on_btn_gaussianBlur_clicked()
-{
+void MainWindow::on_btn_gaussianBlur_clicked(){
+    ui->hst_otsu->hide();//hist hide
     image.GaussianBlur(cv::Size(3,3),0,0);
     this->printImg();
 }
@@ -106,44 +85,61 @@ void MainWindow::on_btn_bin_otsu_clicked(){
 }
 
 void MainWindow::on_btn_bin_bradly_clicked(){
+    ui->hst_otsu->hide();//hist hide
     image.binarizeBradly(5,0.15);
     this->printImg();
 }
 
-void MainWindow::on_btn_dilate_clicked()
-{
+void MainWindow::on_btn_dilate_clicked(){
+    ui->hst_otsu->hide();//hist hide
     cv::Size imgsize=image.getsize();
     int maxsize=imgsize.height>imgsize.width?imgsize.height:imgsize.width;
     image.dilate(ui->spb_dilate_elem->value(),ui->spb_dilate_size->value()>maxsize?maxsize:ui->spb_dilate_size->value());
     this->printImg();
 }
 
-void MainWindow::on_btn_erode_clicked()
-{
+void MainWindow::on_btn_erode_clicked(){
+    ui->hst_otsu->hide();//hist hide
     cv::Size imgsize=image.getsize();
     int maxsize=imgsize.height>imgsize.width?imgsize.height:imgsize.width;
     image.erode(ui->spb_erode_elem->value(),ui->spb_erode_size->value()>maxsize?maxsize:ui->spb_erode_size->value());
     this->printImg();
 }
 
-void MainWindow::on_btn_closure_clicked()
-{
+void MainWindow::on_btn_closing_clicked(){
+    ui->hst_otsu->hide();//hist hide
     cv::Size imgsize=image.getsize();
     int maxsize=imgsize.height>imgsize.width?imgsize.height:imgsize.width;
-    /*
-    image.erode(ui->spb_erode_elem->value(),ui->spb_erode_size->value()>maxsize?maxsize:ui->spb_erode_size->value());
-    image.dilate(ui->spb_dilate_elem->value(),ui->spb_dilate_size->value()>maxsize?maxsize:ui->spb_dilate_size->value());*/
     image.morph(ui->spb_morph_elem->value(),ui->spb_morph_size->value()>maxsize?maxsize:ui->spb_morph_size->value(),1);
     this->printImg();
 }
 
-void MainWindow::on_btn_opening_clicked()
-{
+void MainWindow::on_btn_opening_clicked(){
+    ui->hst_otsu->hide();//hist hide
     cv::Size imgsize=image.getsize();
     int maxsize=imgsize.height>imgsize.width?imgsize.height:imgsize.width;
-    /*
-    image.erode(ui->spb_erode_elem->value(),ui->spb_erode_size->value()>maxsize?maxsize:ui->spb_erode_size->value());
-    image.dilate(ui->spb_dilate_elem->value(),ui->spb_dilate_size->value()>maxsize?maxsize:ui->spb_dilate_size->value());*/
     image.morph(ui->spb_morph_elem->value(),ui->spb_morph_size->value()>maxsize?maxsize:ui->spb_morph_size->value(),0);
+    this->printImg();
+}
+
+void MainWindow::on_btn_cond_dilate_clicked(){
+    ui->hst_otsu->hide();//hist hide
+    cv::Size imgsize=image.getsize();
+    int maxsize=imgsize.height>imgsize.width?imgsize.height:imgsize.width;
+    image.condDilate(ui->spb_erode_elem->value(),
+                     ui->spb_erode_size->value()>maxsize?maxsize:ui->spb_erode_size->value(),
+                     ui->spb_dilate_elem->value(),
+                     ui->spb_dilate_size->value()>maxsize?maxsize:ui->spb_dilate_size->value());
+    this->printImg();
+}
+
+void MainWindow::on_btn_skelenonize_clicked(){
+    ui->hst_otsu->hide();//hist hide
+    cv::Size imgsize=image.getsize();
+    int maxsize=imgsize.height>imgsize.width?imgsize.height:imgsize.width;
+    image.to_skeleton(ui->spb_erode_elem->value(),
+                     ui->spb_erode_size->value()>maxsize?maxsize:ui->spb_erode_size->value(),
+                     ui->spb_dilate_elem->value(),
+                     ui->spb_dilate_size->value()>maxsize?maxsize:ui->spb_dilate_size->value());
     this->printImg();
 }
