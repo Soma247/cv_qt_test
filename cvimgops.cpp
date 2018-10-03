@@ -44,7 +44,7 @@ bool cvImgOps::GaussianBlur(cv::Size ksize, double sigmaX, double sigmaY, int bo
 
 bool cvImgOps::dilate(int dilation_elem, int dilation_size){//element 1(rect),2(cross),else(ellipse)
     if(!binarized)
-        if(binarizeBradly(5,0.15))
+        if(binarizeOtsu())
             return 1;
 
     int dilation_type;
@@ -62,7 +62,7 @@ bool cvImgOps::dilate(int dilation_elem, int dilation_size){//element 1(rect),2(
 bool cvImgOps::erode(int erosion_elem, int erosion_size){//element 1(rect),2(cross),else(ellipse)
 
     if(!binarized)
-        if(binarizeBradly(5,0.15))
+        if(binarizeOtsu())
             return 1;
 
     int erosion_type;
@@ -79,7 +79,7 @@ bool cvImgOps::erode(int erosion_elem, int erosion_size){//element 1(rect),2(cro
 
 bool cvImgOps::morph(int morph_elem, int morph_size, int operation){//element 1(rect),2(cross),else(ellipse); ops 0-4 :op.close,grad,tophat,blhat
     if(!binarized)
-        if(binarizeBradly(5,0.15))
+        if(binarizeOtsu())
             return 1;
 
     // Since MORPH_X : 2,3,4,5 and 6
@@ -101,7 +101,7 @@ bool cvImgOps::morph(int morph_elem, int morph_size, int operation){//element 1(
 bool cvImgOps::condDilate(int erode_elem, int erode_size,int dilate_elem,int dilate_size)
 {
     if(!binarized)
-        if(binarizeBradly(5,0.15))
+        if(binarizeOtsu())
             return 1;
     int erode_type,dilate_type;
     if(erode_elem == 0) erode_type = cv::MORPH_RECT;
@@ -159,7 +159,7 @@ bool cvImgOps::cross(cv::Mat img)
 
 bool cvImgOps::to_skeleton(int erode_elem, int erode_size, int dilate_elem, int dilate_size){
     if(!binarized)
-        if(binarizeBradly(5,0.15))
+        if(binarizeOtsu())
             return 1;
     int erode_type,dilate_type;
     if(erode_elem == 0) erode_type = cv::MORPH_RECT;
@@ -178,13 +178,13 @@ bool cvImgOps::to_skeleton(int erode_elem, int erode_size, int dilate_elem, int 
     int iter=0;
     do{
         std::cout<<iter++<<std::endl;
-      cv::erode(*curimg, eroded, erlelement);
-      cv::dilate(eroded, temp, dilelement); // temp = open(img)
-      cv::subtract(*curimg, temp, temp);
-      cv::bitwise_or(skel, temp, skel);
-      eroded.copyTo(*curimg);
-      done = (cv::countNonZero(*curimg) == 0);
-    } while (!done && iter<1000);
+        cv::erode(*curimg, eroded, erlelement);
+        cv::dilate(eroded, temp, dilelement); // temp = open(img)
+        cv::subtract(*curimg, temp, temp);
+        cv::bitwise_or(skel, temp, skel);
+        eroded.copyTo(*curimg);
+        done = (cv::countNonZero(*curimg) == 0);
+    } while (!done && iter<10000);
     skel.copyTo(*curimg);
     skel.release();
     temp.release();
@@ -193,6 +193,7 @@ bool cvImgOps::to_skeleton(int erode_elem, int erode_size, int dilate_elem, int 
 
 bool cvImgOps::binarizeOtsu(){
     if(!pixcount)return 1;//blank img
+    if(binarized)return 0;
     if (curimg->type()!=CV_8UC1)toGrey();
 
     int imax=curimg->size().height,
@@ -237,17 +238,21 @@ bool cvImgOps::binarizeOtsu(){
 }
 
 
-bool cvImgOps::binarizeBradly(int wsize,double offset=0.15){
+bool cvImgOps::binarizeBradly(int wsize,double offset=0.0){
     //-------------init----------------------------------------------------
     if(!pixcount)return 1;//blank img
+    if(binarized)return 0;
     if (curimg->type()!=CV_8UC1)toGrey();
     int imax=curimg->size().height,
             jmax=curimg->size().width,
-            count=imax/wsize+imax%wsize?1:0,
+            count=imax/wsize+(imax%wsize?1:0),
             wheight=imax/count,
             wwidth=jmax/count;
-
+    std::cerr<<imax<<" "<<jmax<<" "<<wwidth<<" "<<wheight<<std::endl;
     ulong ** intmatr=new ulong*[imax];
+    cv::Mat intmatrim;
+    curimg->copyTo(intmatrim);
+
     for(int i=0;i<imax;i++)
         intmatr[i]=new ulong[jmax];
     **intmatr=0;
@@ -266,22 +271,42 @@ bool cvImgOps::binarizeBradly(int wsize,double offset=0.15){
     //---------------------------------------------------------------------
     int x1,x2,y1,y2,i(0),j(0),wpcount;
     ulong sum;
+    int it=0;
     while(i<imax && j<jmax){
+
         x1=j;
         y1=i;
         if((x2=j+wwidth)>=jmax)x2=jmax-1;
         if((y2=i+wheight)>=imax)y2=imax-1;
-        wpcount=(x2-x1)*(y2-y1);
-        sum=intmatr[y1][x1]+intmatr[y2][x2]-intmatr[y1][x2]-intmatr[y2][x1];
-        for(int l=y1;l<=y2;l++)
-            for(int c=x1;c<=x2;c++)
-                curimg->at<uchar>(l,c) = (static_cast<double>(curimg->at<uchar>(l,c))>=sum*(1.0+offset)/wpcount)? 255 : 0;//new binary img
-        if((j=x2+1)>=jmax){//to next line
-            j=0;
-            i=y2+1;
+        if((wpcount=(x2-x1)*(y2-y1))){
+            sum=intmatr[y1][x1]+intmatr[y2][x2]-intmatr[y1][x2]-intmatr[y2][x1];
+            std::cerr<<x1<<" "<<y1<<" "<<wpcount<<" "<<sum<<std::endl;
+            std::cerr<<x2<<" "<<y2<<" "<<sum*(1.0+offset)/wpcount<<std::endl<<std::endl;
+            for(int l=y1;l<=y2;l++)
+                for(int c=x1;c<=x2;c++){
+                    if(sum)
+                        curimg->at<uchar>(l,c) = (static_cast<double>(curimg->at<uchar>(l,c))>=sum*(1.0+offset)/wpcount)? 255 : 0;//new binary
+                    else
+                        curimg->at<uchar>(l,c) = (static_cast<double>(curimg->at<uchar>(l,c))>sum*(1.0+offset)/wpcount)? 255 : 0;
+                }
+            if((j=x2+1)>=jmax){//to next line
+                j=0;
+                i=y2+1;
+            }
+
+            it++;
         }
+        else break;
     }
 
+
+    /*
+    for(int i=0;i<imax;i++){//print integral (summ) matrix
+        for(int j=0;j<jmax;j++)
+            std::cout<<intmatr[i][j]<<" ";
+        std::cout<<std::endl;
+    }
+*/
 
     //------------------free & ret-----------------------------------------
     for(int i=0;i<imax;i++)delete[] intmatr[i];

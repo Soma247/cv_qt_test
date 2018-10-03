@@ -86,7 +86,13 @@ void MainWindow::on_btn_bin_otsu_clicked(){
 
 void MainWindow::on_btn_bin_bradly_clicked(){
     ui->hst_otsu->hide();//hist hide
-    image.binarizeBradly(5,0.15);
+    cv::Size imsz=image.getsize();
+    int bsize=imsz.height>imsz.width?imsz.width:imsz.height;
+    int spbsz=ui->spb_bradly_sz->value();
+    bsize=bsize>spbsz?spbsz:bsize;
+    if(!bsize%2)bsize--;
+    if(bsize!=spbsz)ui->spb_bradly_sz->setValue(bsize);
+    if(image.binarizeBradly(bsize,ui->dsb_bradly_ofst->value()))std::cerr<<"bradly_error"<<std::endl;
     this->printImg();
 }
 
