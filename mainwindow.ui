@@ -279,7 +279,7 @@
           <number>100000</number>
          </property>
          <property name="value">
-          <number>1</number>
+          <number>3</number>
          </property>
         </widget>
        </item>
@@ -321,7 +321,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>40</x>
@@ -341,7 +341,7 @@
      <item>
       <widget class="QSpinBox" name="spb_bradly_sz">
        <property name="minimum">
-        <number>1</number>
+        <number>3</number>
        </property>
        <property name="maximum">
         <number>10000</number>

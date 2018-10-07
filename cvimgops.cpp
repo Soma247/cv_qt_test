@@ -39,6 +39,7 @@ bool cvImgOps::toGrey(){
 bool cvImgOps::GaussianBlur(cv::Size ksize, double sigmaX, double sigmaY, int borderType){
     if(toGrey())return 1;
     cv::GaussianBlur(*curimg,*curimg, ksize, sigmaX,sigmaY,borderType);
+    binarized=0;
     return 0;
 }
 
@@ -53,8 +54,8 @@ bool cvImgOps::dilate(int dilation_elem, int dilation_size){//element 1(rect),2(
     else dilation_type = cv::MORPH_ELLIPSE;
 
     cv::Mat element = getStructuringElement( dilation_type,
-                                             cv::Size( 2*dilation_size + 1, 2*dilation_size+1 ),
-                                             cv::Point( dilation_size, dilation_size ) );
+                                             cv::Size(2*dilation_size+1, 2*dilation_size+1),
+                                             cv::Point(dilation_size, dilation_size));
     cv::dilate( *curimg, *curimg, element );
     return 0;
 }
@@ -71,64 +72,84 @@ bool cvImgOps::erode(int erosion_elem, int erosion_size){//element 1(rect),2(cro
     else erosion_type = cv::MORPH_ELLIPSE;
 
     cv::Mat element = getStructuringElement(erosion_type,
-                                            cv::Size( 2*erosion_size + 1, 2*erosion_size+1 ),
+                                            cv::Size( 2*erosion_size+1, 2*erosion_size+1 ),
                                             cv::Point( erosion_size, erosion_size ) );
     cv::erode( *curimg, *curimg, element );
     return 0;
 }
 
-bool cvImgOps::morph(int morph_elem, int morph_size, int operation){//element 1(rect),2(cross),else(ellipse); ops 0-4 :op.close,grad,tophat,blhat
+bool cvImgOps::opening(int element,int size){
     if(!binarized)
         if(binarizeOtsu())
             return 1;
-
-    // Since MORPH_X : 2,3,4,5 and 6
-
-    int morph_type;
-    if(morph_elem == 0) morph_type = cv::MORPH_RECT;
-    else if(morph_elem == 1) morph_type = cv::MORPH_CROSS;
-    else morph_type = cv::MORPH_ELLIPSE;
-
-    operation+=2;
-    cv::Mat element = getStructuringElement( morph_type,
-                                             cv::Size( 2*morph_size + 1, 2*morph_size+1 ),
-                                             cv::Point( morph_size, morph_size ) );
-    morphologyEx(*curimg,*curimg, operation, element );
+    int type;
+    switch (element) {
+    case 0:
+        type=cv::MORPH_RECT;
+        break;
+    case 1:
+        type=cv::MORPH_CROSS;
+        break;
+    case 2:
+    default://2
+        type=cv::MORPH_ELLIPSE;
+    }
+    if(erode(type,size)||dilate(type,size))return 2;
     return 0;
-
+}
+bool cvImgOps::closing(int element,int size){
+    if(!binarized)
+        if(binarizeOtsu())
+            return 1;
+    int type;
+    switch (element) {
+    case 0:
+        type=cv::MORPH_RECT;
+        break;
+    case 1:
+        type=cv::MORPH_CROSS;
+        break;
+    case 2:
+    default://2
+        type=cv::MORPH_ELLIPSE;
+    }
+    if(dilate(type,size)||erode(type,size))return 2;
+    return 0;
 }
 
-bool cvImgOps::condDilate(int erode_elem, int erode_size,int dilate_elem,int dilate_size)
+bool cvImgOps::condDilate(int dil_elem, int dil_size, int er_elem, int er_size)
 {
     if(!binarized)
         if(binarizeOtsu())
             return 1;
-    int erode_type,dilate_type;
-    if(erode_elem == 0) erode_type = cv::MORPH_RECT;
-    else if(erode_elem == 1) erode_type = cv::MORPH_CROSS;
-    else erode_type = cv::MORPH_ELLIPSE;
-    if(dilate_elem == 0) dilate_type = cv::MORPH_RECT;
-    else if(dilate_elem == 1) dilate_type = cv::MORPH_CROSS;
-    else dilate_type = cv::MORPH_ELLIPSE;
+    int dil_type,er_type;
+    if(dil_elem == 0) dil_type = cv::MORPH_RECT;
+    else if(dil_elem == 1) dil_type = cv::MORPH_CROSS;
+    else dil_type = cv::MORPH_ELLIPSE;
 
-    cv::Mat tempimg;
-    curimg->copyTo(tempimg);
-    /*   if(morph(morph_type,morph_size,1)||
-        dilate(dilate_elem,dilate_size)||
-          cross(tempimg))return 1;*/
+    if(er_elem == 0) er_type = cv::MORPH_RECT;
+    else if(er_elem == 1) er_type = cv::MORPH_CROSS;
+    else er_type = cv::MORPH_ELLIPSE;
 
-    cv::namedWindow("temp");
-    cv::namedWindow("2");
-    cv::namedWindow("3");
-    cv::namedWindow("4");
-    cv::imshow("temp",tempimg);
+    namedWindow( "Display window", cv::WINDOW_NORMAL);
+    imshow("Display window",*curimg);
+    cv::Mat original,temp;
+    curimg->copyTo(original);
 
-    erode(erode_type,erode_size);
-    cv::imshow("2",*curimg);
-    dilate(dilate_type,dilate_size);
-    cv::imshow("3",*curimg);
-    cross(tempimg);
-    cv::imshow("4",*curimg);
+    curimg->copyTo(temp);
+    bool done;
+      erode(er_type,er_size);
+    do
+    {
+        done=true;
+        curimg->copyTo(temp);
+        dilate(dil_type,dil_size);
+        if(cross(original))std::cerr<<"error cross"<<std::endl;
+        for(int i=0;i<curimg->size().height && done==true;i++)
+            for(int j=0;j<curimg->size().width && done==true;j++)
+                if(curimg->at<uchar>(i,j)!=temp.at<uchar>(i,j))
+                        done=false;
+    } while (!done);
     return 0;
 }
 
@@ -145,14 +166,19 @@ bool cvImgOps::combine(cv::Mat img){
 
 bool cvImgOps::cross(cv::Mat img)
 {
-    if(!pixcount||img.type()!=CV_8UC1)return 1;
-    std::cout<<"cross"<<std::endl;
-    int minwidth=img.size().width>curimg->size().width?curimg->size().width:img.size().width;
-    int minheigth=img.size().height>curimg->size().height?curimg->size().height:img.size().height;
+    if(curimg->size()!=img.size())return 1;
+    if(!pixcount||img.type()!=CV_8UC1)return 2;
 
-    for(int i=0;i<minheigth;i++)
-        for(int j=0;j<minwidth;j++){
-            curimg->at<uchar>(i,j)=(curimg->at<uchar>(i,j)== img.at<uchar>(i,j))?255:0;
+    if(!binarized)
+        if(binarizeOtsu())
+            return 3;
+
+
+
+    for(int i=0;i<img.size().height;i++)
+        for(int j=0;j<img.size().width;j++){
+            if(curimg->at<uchar>(i,j)==255&&curimg->at<uchar>(i,j)!=img.at<uchar>(i,j))
+                curimg->at<uchar>(i,j)=0;
         }
     return 0;
 }
@@ -168,32 +194,32 @@ bool cvImgOps::to_skeleton(int erode_elem, int erode_size, int dilate_elem, int 
     if(dilate_elem == 0) dilate_type = cv::MORPH_RECT;
     else if(dilate_elem == 1) dilate_type = cv::MORPH_CROSS;
     else dilate_type = cv::MORPH_ELLIPSE;
-    cv::Mat temp,eroded,skel(curimg->size(), CV_8UC1, cv::Scalar(0));
+    cv::Mat dilated,eroded,skel(curimg->size(), CV_8UC1, cv::Scalar(0));
 
     if(dilate_size<2)dilate_size=2;
     if(erode_size<2)erode_size=2;
     cv::Mat dilelement = cv::getStructuringElement(dilate_type, cv::Size(dilate_size, dilate_size));
     cv::Mat erlelement = cv::getStructuringElement(erode_type, cv::Size(erode_size, erode_size));
     bool done;
-    int iter=0;
-    do{
-        std::cout<<iter++<<std::endl;
-        cv::erode(*curimg, eroded, erlelement);
-        cv::dilate(eroded, temp, dilelement); // temp = open(img)
-        cv::subtract(*curimg, temp, temp);
-        cv::bitwise_or(skel, temp, skel);
-        eroded.copyTo(*curimg);
+    cv::imshow("name",skel);
+    do
+    {
+        cv::erode(*curimg, eroded, erlelement);//erode curimg to eroded
+        cv::dilate(eroded, dilated, dilelement); // dilate eroded to dilated
+        cv::subtract(*curimg, dilated, dilated);//curimg-dilated =>dilated
+        cv::bitwise_or(skel, dilated, skel);//skel | dilated =>skel
+        eroded.copyTo(*curimg);//eroded to curimg
         done = (cv::countNonZero(*curimg) == 0);
-    } while (!done && iter<10000);
+    } while (!done);
+
     skel.copyTo(*curimg);
     skel.release();
-    temp.release();
+    dilated.release();
     return 0;
 }
 
 bool cvImgOps::binarizeOtsu(){
     if(!pixcount)return 1;//blank img
-    if(binarized)return 0;
     if (curimg->type()!=CV_8UC1)toGrey();
 
     int imax=curimg->size().height,
@@ -238,16 +264,15 @@ bool cvImgOps::binarizeOtsu(){
 }
 
 
-bool cvImgOps::binarizeBradly(int wsize,double offset=0.0){
+bool cvImgOps::binarizeBradly(int wsize,double offset=0.15){
     //-------------init----------------------------------------------------
     if(!pixcount)return 1;//blank img
-    if(binarized)return 0;
     if (curimg->type()!=CV_8UC1)toGrey();
     int imax=curimg->size().height,
             jmax=curimg->size().width,
-            count=imax/wsize+(imax%wsize?1:0),
-            wheight=imax/count,
-            wwidth=jmax/count;
+
+            wheight=wsize,
+            wwidth=wsize;
     std::cerr<<imax<<" "<<jmax<<" "<<wwidth<<" "<<wheight<<std::endl;
     ulong ** intmatr=new ulong*[imax];
     cv::Mat intmatrim;
@@ -269,44 +294,19 @@ bool cvImgOps::binarizeBradly(int wsize,double offset=0.0){
                     + intmatr[i][j-1]
                     - intmatr[i-1][j-1];
     //---------------------------------------------------------------------
-    int x1,x2,y1,y2,i(0),j(0),wpcount;
+    int x1,x2,y1,y2,wpcount;
     ulong sum;
-    int it=0;
-    while(i<imax && j<jmax){
+    for(y1=0;y1<imax-1;y1++){
+        if((y2=y1+wheight)>=imax)y2=imax-1;
+        for(x1=0;x1<jmax-1;x1++){
+            if((x2=x1+wwidth)>=jmax)x2=jmax-1;
 
-        x1=j;
-        y1=i;
-        if((x2=j+wwidth)>=jmax)x2=jmax-1;
-        if((y2=i+wheight)>=imax)y2=imax-1;
-        if((wpcount=(x2-x1)*(y2-y1))){
-            sum=intmatr[y1][x1]+intmatr[y2][x2]-intmatr[y1][x2]-intmatr[y2][x1];
-            std::cerr<<x1<<" "<<y1<<" "<<wpcount<<" "<<sum<<std::endl;
-            std::cerr<<x2<<" "<<y2<<" "<<sum*(1.0+offset)/wpcount<<std::endl<<std::endl;
-            for(int l=y1;l<=y2;l++)
-                for(int c=x1;c<=x2;c++){
-                    if(sum)
-                        curimg->at<uchar>(l,c) = (static_cast<double>(curimg->at<uchar>(l,c))>=sum*(1.0+offset)/wpcount)? 255 : 0;//new binary
-                    else
-                        curimg->at<uchar>(l,c) = (static_cast<double>(curimg->at<uchar>(l,c))>sum*(1.0+offset)/wpcount)? 255 : 0;
+            if((wpcount=(x2-x1)*(y2-y1)) && x2>x1 && y2>y1)
+                if((sum=intmatr[y1][x1]+intmatr[y2][x2]-intmatr[y1][x2]-intmatr[y2][x1]) && sum<255ul*wpcount){
+                    curimg->at<uchar>(y1,x1) = (static_cast<double>(curimg->at<uchar>(y1,x1))>(sum*(1-offset)/wpcount))? 255 : 0;
                 }
-            if((j=x2+1)>=jmax){//to next line
-                j=0;
-                i=y2+1;
-            }
-
-            it++;
         }
-        else break;
     }
-
-
-    /*
-    for(int i=0;i<imax;i++){//print integral (summ) matrix
-        for(int j=0;j<jmax;j++)
-            std::cout<<intmatr[i][j]<<" ";
-        std::cout<<std::endl;
-    }
-*/
 
     //------------------free & ret-----------------------------------------
     for(int i=0;i<imax;i++)delete[] intmatr[i];

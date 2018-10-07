@@ -34,8 +34,9 @@ public:
 
     bool dilate(int dilation_elem=0,int dilation_size=1);
     bool erode(int erosion_elem=0, int erosion_size=1);
-    bool morph(int morph_elem=0,int morph_size=1, int operation=0);
-    bool condDilate(int erode_elem=0, int erode_size=1, int dilate_elem=0, int dilate_size=1);
+    bool opening(int elem=0, int size=3);
+    bool closing(int elem=0, int size=3);
+    bool condDilate(int dil_elem=0, int dil_size=1, int er_elem=0, int er_size=1);
     bool combine(cv::Mat img);
     bool cross(cv::Mat img);
     bool to_skeleton(int erode_elem=0, int erode_size=1, int dilate_elem=0, int dilate_size=1);

@@ -31,7 +31,8 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     asmOpenCV.h \
     qcustomplot.h \
-    cvimgops.h
+    cvimgops.h \
+    skel_by_eichiiro_momma.h
 
 FORMS    += mainwindow.ui
 
